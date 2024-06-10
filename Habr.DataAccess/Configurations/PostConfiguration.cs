@@ -18,7 +18,7 @@ namespace Habr.DataAccess.Configurations
 
             entityTypeBuilder.Property(p => p.Text)
                 .IsRequired()
-                .HasMaxLength(200);
+                .HasMaxLength(4000);
 
             entityTypeBuilder.Property(p => p.Created)
                 .IsRequired()
