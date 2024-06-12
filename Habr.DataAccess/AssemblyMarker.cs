@@ -1,6 +1,6 @@
 ﻿namespace Habr.DataAccess
 {
-    public class AssemblyMarker
+    public abstract class AssemblyMarker
     {
     }
 }
