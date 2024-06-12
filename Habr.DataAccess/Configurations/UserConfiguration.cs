@@ -22,17 +22,6 @@ namespace Habr.DataAccess.Configurations
                 .Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(100);
-
-            entityTypeBuilder
-                .HasMany(u => u.Posts)
-                .WithOne(p => p.User)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entityTypeBuilder
-                .HasMany(u => u.Comments)
-                .WithOne(c => c.User)
-                .HasForeignKey(c => c.UserId);
         }
     }
 }

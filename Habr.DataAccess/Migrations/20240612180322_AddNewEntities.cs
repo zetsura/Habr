@@ -80,8 +80,7 @@ namespace Habr.DataAccess.Migrations
                 table: "Posts",
                 column: "UserId",
                 principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />

@@ -32,7 +32,7 @@ namespace Habr.DataAccess.Configurations
                 .HasOne(p => p.User)
                 .WithMany(u => u.Posts)
                 .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             entityTypeBuilder
                 .HasMany(p => p.Comments)

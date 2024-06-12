@@ -17,9 +17,7 @@ namespace Habr.DataAccess
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserConfiguration).Assembly);
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(PostConfiguration).Assembly);
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(CommentConfiguration).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AssemblyMarker).Assembly);
         }
     }
 }
