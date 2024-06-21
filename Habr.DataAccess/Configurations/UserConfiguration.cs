@@ -22,6 +22,15 @@ namespace Habr.DataAccess.Configurations
                 .Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(100);
+
+            entityTypeBuilder
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            entityTypeBuilder
+                .Property(u => u.Password)
+                .IsRequired()
+                .HasMaxLength(100);
         }
     }
 }
