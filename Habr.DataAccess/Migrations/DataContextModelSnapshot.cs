@@ -55,7 +55,7 @@ namespace Habr.DataAccess.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("Habr.DataAccess.Entities.Post", b =>
@@ -86,7 +86,7 @@ namespace Habr.DataAccess.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("Habr.DataAccess.Entities.User", b =>
@@ -109,7 +109,7 @@ namespace Habr.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Habr.DataAccess.Entities.Comment", b =>
