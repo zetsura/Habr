@@ -31,6 +31,11 @@ namespace Habr.DataAccess.Configurations
                 .Property(u => u.Password)
                 .IsRequired()
                 .HasMaxLength(100);
+
+            entityTypeBuilder
+                .Property(u => u.RegisteredDate)
+                .IsRequired()
+                .HasColumnType("datetime");
         }
     }
 }

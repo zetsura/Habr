@@ -29,6 +29,16 @@ namespace Habr.DataAccess.Configurations
                 .HasColumnType("datetime");
 
             entityTypeBuilder
+                .Property(p => p.UpdatedDate)
+                .IsRequired()
+                .HasColumnType("datetime");
+
+            entityTypeBuilder
+                .Property(p => p.IsPublished)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            entityTypeBuilder
                 .HasOne(p => p.User)
                 .WithMany(u => u.Posts)
                 .HasForeignKey(p => p.UserId)

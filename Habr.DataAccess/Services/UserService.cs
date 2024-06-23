@@ -1,37 +1,53 @@
 ﻿using Habr.DataAccess;
 using Habr.DataAccess.Entities;
 using Habr.DataAccess.Servicec;
+using Microsoft.EntityFrameworkCore;
 
 namespace Habr.Services
 {
     public class UserService
     {
         private readonly DataContext _context;
+        private const int MaxNameLength = 100;
+        private const int MaxEmailLength = 200;
+        private const int MaxPasswordLength = 100;
 
         public UserService(DataContext context)
         {
             _context = context;
         }
 
-        public void Register()
+        public async Task RegisterAsync()
         {
             Console.Write("Enter your name: ");
             var name = Console.ReadLine();
-            if (string.IsNullOrEmpty(name) || name.Length > 100)
+            if (string.IsNullOrEmpty(name))
             {
-                Console.WriteLine("Name is required and must be less than 100 characters.");
+                Console.WriteLine("Name is required.");
+                return;
+            }
+
+            if (name.Length > MaxNameLength)
+            {
+                Console.WriteLine($"Name must be less than {MaxNameLength} characters.");
                 return;
             }
 
             Console.Write("Enter your email: ");
             var email = Console.ReadLine();
-            if (string.IsNullOrEmpty(email) || email.Length > 200)
+            if (string.IsNullOrEmpty(email))
             {
-                Console.WriteLine("Email is required and must be less than 200 characters.");
+                Console.WriteLine("Email is required.");
                 return;
             }
 
-            var existingUser = _context.Users.SingleOrDefault(u => u.Email == email);
+            if (email.Length > MaxEmailLength)
+            {
+                Console.WriteLine($"Email must be less than {MaxEmailLength} characters.");
+                return;
+            }
+
+            var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
             if (existingUser != null)
             {
                 Console.WriteLine("Email address is already taken.");
@@ -47,14 +63,26 @@ namespace Habr.Services
                 return;
             }
 
+            if (password.Length > MaxPasswordLength)
+            {
+                Console.WriteLine($"Password must be less than {MaxPasswordLength} characters.");
+                return;
+            }
+
             var hashedPassword = PasswordService.HashPassword(password);
-            var user = new User { Name = name, Email = email, Password = hashedPassword };
+            var user = new User
+            {
+                Name = name,
+                Email = email,
+                Password = hashedPassword,
+                RegisteredDate = DateTime.UtcNow
+            };
             _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             Console.WriteLine("User registered successfully.");
         }
 
-        public User Login()
+        public async Task<User> LoginAsync()
         {
             Console.Write("Enter your email: ");
             var email = Console.ReadLine();
@@ -64,7 +92,7 @@ namespace Habr.Services
                 return null;
             }
 
-            var user = _context.Users.SingleOrDefault(u => u.Email == email);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
             if (user == null)
             {
                 Console.WriteLine("Email address is incorrect.");

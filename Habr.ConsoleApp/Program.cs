@@ -10,7 +10,7 @@ namespace Habr.ConsoleApp
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
 
@@ -18,7 +18,7 @@ namespace Habr.ConsoleApp
             {
                 var services = scope.ServiceProvider;
                 var context = services.GetRequiredService<DataContext>();
-                context.Database.Migrate();
+                await context.Database.MigrateAsync();
 
                 Console.WriteLine("Database created and migration applied.");
 
@@ -26,31 +26,7 @@ namespace Habr.ConsoleApp
                 var postService = services.GetRequiredService<PostService>();
                 var commentService = services.GetRequiredService<CommentService>();
 
-                while (true)
-                {
-                    Console.WriteLine("1. Register");
-                    Console.WriteLine("2. Login");
-                    Console.WriteLine("3. Exit");
-                    Console.Write("Select an option: ");
-                    var option = Console.ReadLine();
-
-                    if (option == "1")
-                    {
-                        userService.Register();
-                    }
-                    else if (option == "2")
-                    {
-                        var user = userService.Login();
-                        if (user != null)
-                        {
-                            UserMenu(postService, commentService, user);
-                        }
-                    }
-                    else if (option == "3")
-                    {
-                        break;
-                    }
-                }
+                await MainMenuAsync(userService, postService, commentService);
             }
         }
 
@@ -70,7 +46,38 @@ namespace Habr.ConsoleApp
                     services.AddTransient<CommentService>();
                 });
 
-        static void UserMenu(PostService postService, CommentService commentService, User user)
+        static async Task MainMenuAsync(UserService userService, PostService postService, CommentService commentService)
+        {
+            while (true)
+            {
+                Console.WriteLine("1. Register");
+                Console.WriteLine("2. Login");
+                Console.WriteLine("3. Exit");
+                Console.Write("Select an option: ");
+                var option = Console.ReadLine();
+
+                switch (option)
+                {
+                    case "1":
+                        await userService.RegisterAsync();
+                        break;
+                    case "2":
+                        var user = await userService.LoginAsync();
+                        if (user != null)
+                        {
+                            await UserMenuAsync(postService, commentService, user);
+                        }
+                        break;
+                    case "3":
+                        return;
+                    default:
+                        Console.WriteLine("Invalid option. Please select again.");
+                        break;
+                }
+            }
+        }
+
+        static async Task UserMenuAsync(PostService postService, CommentService commentService, User user)
         {
             while (true)
             {
@@ -88,28 +95,31 @@ namespace Habr.ConsoleApp
                 switch (option)
                 {
                     case "1":
-                        postService.ViewAllPosts();
+                        await postService.ViewAllPostsAsync();
                         break;
                     case "2":
-                        postService.CreatePost(user);
+                        await postService.CreatePostAsync(user);
                         break;
                     case "3":
-                        postService.EditPost(user);
+                        await postService.EditPostAsync(user);
                         break;
                     case "4":
-                        postService.DeletePost(user);
+                        await postService.DeletePostAsync(user);
                         break;
                     case "5":
-                        commentService.CommentOnPost(user);
+                        await commentService.CommentOnPostAsync(user);
                         break;
                     case "6":
-                        commentService.ReplyToComment(user);
+                        await commentService.ReplyToCommentAsync(user);
                         break;
                     case "7":
-                        commentService.DeleteComment(user);
+                        await commentService.DeleteCommentAsync(user);
                         break;
                     case "8":
                         return;
+                    default:
+                        Console.WriteLine("Invalid option. Please select again.");
+                        break;
                 }
             }
         }
