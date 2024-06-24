@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Habr.DataAccess.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240623203233_AddedNewEntities")]
+    [Migration("20240624093939_AddedNewEntities")]
     partial class AddedNewEntities
     {
         /// <inheritdoc />

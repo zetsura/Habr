@@ -31,35 +31,77 @@ namespace Habr.Services
                 return;
             }
 
-            Console.WriteLine("\nPosts:");
+            Console.WriteLine("\n====================");
+            Console.WriteLine("Published Posts:");
+            Console.WriteLine("====================");
+
             foreach (var post in posts)
             {
-                Console.WriteLine($"ID: {post.Id}, Title: {post.Title}, by {post.User.Email} at {post.Created}, Updated at {post.UpdatedDate}\n");
+                Console.WriteLine($"\nPost ID: {post.Id}");
+                Console.WriteLine($"Title: {post.Title}");
+                Console.WriteLine($"Text: {post.Text}");
+                Console.WriteLine($"Author: {post.User.Email}");
+                Console.WriteLine($"Created: {post.Created}");
+                Console.WriteLine($"Updated: {post.UpdatedDate}");
+
                 if (post.Comments != null && post.Comments.Count > 0)
                 {
-                    Console.WriteLine("Comments:");
+                    Console.WriteLine("\nComments:");
                     foreach (var comment in post.Comments)
                     {
-                        Console.WriteLine($"ID: {comment.Id}, Comment by {comment.User.Email} at {comment.Created}: {comment.Content}\n");
+                        Console.WriteLine($"\tComment ID: {comment.Id}");
+                        Console.WriteLine($"\tComment by: {comment.User.Email}");
+                        Console.WriteLine($"\tCreated: {comment.Created}");
+                        Console.WriteLine($"\tContent: {comment.Content}\n");
                     }
                 }
+                Console.WriteLine("--------------------");
             }
         }
 
+        public async Task ViewAllDraftsAsync(User user)
+        {
+            var drafts = await _context.Posts.Include(p => p.User)
+                                             .Where(p => !p.IsPublished && p.UserId == user.Id)
+                                             .OrderByDescending(p => p.Created)
+                                             .AsNoTracking()
+                                             .ToListAsync();
 
-        public async Task CreatePostAsync(User user)
+            if (drafts.Count == 0)
+            {
+                Console.WriteLine("No drafts found.");
+                return;
+            }
+
+            Console.WriteLine("\n====================");
+            Console.WriteLine("Draft Posts:");
+            Console.WriteLine("====================");
+
+            foreach (var draft in drafts)
+            {
+                Console.WriteLine($"\nDraft ID: {draft.Id}");
+                Console.WriteLine($"Title: {draft.Title}");
+                Console.WriteLine($"Text: {draft.Text}");
+                Console.WriteLine($"Author: {draft.User.Email}");
+                Console.WriteLine($"Created: {draft.Created}");
+                Console.WriteLine($"Updated: {draft.UpdatedDate}");
+                Console.WriteLine("--------------------");
+            }
+        }
+
+        public async Task CreatePostAsync(User user, bool isPublished)
         {
             Console.Write("Enter the title of your post: ");
             var title = Console.ReadLine();
             if (string.IsNullOrEmpty(title))
             {
-                Console.WriteLine("Title is required.");
+                Console.WriteLine("The title is required.");
                 return;
             }
 
             if (title.Length > MaxTitleLength)
             {
-                Console.WriteLine($"Title must be less than {MaxTitleLength} characters.");
+                Console.WriteLine($"The title must be less than {MaxTitleLength} symbols.");
                 return;
             }
 
@@ -67,13 +109,13 @@ namespace Habr.Services
             var text = Console.ReadLine();
             if (string.IsNullOrEmpty(text))
             {
-                Console.WriteLine("Text is required.");
+                Console.WriteLine("The text is required.");
                 return;
             }
 
             if (text.Length > MaxTextLength)
             {
-                Console.WriteLine($"Text must be less than {MaxTextLength} characters.");
+                Console.WriteLine($"The text must be less than {MaxTextLength} symbols.");
                 return;
             }
 
@@ -84,11 +126,11 @@ namespace Habr.Services
                 Created = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow,
                 UserId = user.Id,
-                IsPublished = true
+                IsPublished = isPublished
             };
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
-            Console.WriteLine("Post created successfully.");
+            Console.WriteLine(isPublished ? "Post created and published successfully." : "Post created as draft successfully.");
         }
 
 
@@ -108,17 +150,23 @@ namespace Habr.Services
                 return;
             }
 
+            if (post.IsPublished)
+            {
+                Console.WriteLine("A published post cannot be edited. It must be moved to drafts first.");
+                return;
+            }
+
             Console.Write("Enter the new title of your post: ");
             var title = Console.ReadLine();
             if (string.IsNullOrEmpty(title))
             {
-                Console.WriteLine("Title is required.");
+                Console.WriteLine("The title is required.");
                 return;
             }
 
             if (title.Length > MaxTitleLength)
             {
-                Console.WriteLine($"Title must be less than {MaxTitleLength} characters.");
+                Console.WriteLine($"The title must be less than {MaxTitleLength} symbols.");
                 return;
             }
 
@@ -126,13 +174,13 @@ namespace Habr.Services
             var text = Console.ReadLine();
             if (string.IsNullOrEmpty(text))
             {
-                Console.WriteLine("Text is required.");
+                Console.WriteLine("The text is required.");
                 return;
             }
 
             if (text.Length > MaxTextLength)
             {
-                Console.WriteLine($"Text must be less than {MaxTextLength} characters.");
+                Console.WriteLine($"The text must be less than {MaxTextLength} symbols.");
                 return;
             }
 
@@ -156,7 +204,7 @@ namespace Habr.Services
             var post = await _context.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id);
             if (post == null)
             {
-                Console.WriteLine("Post not found or you don't have permission to delete it.");
+                Console.WriteLine("The post does not exist.");
                 return;
             }
 
@@ -175,10 +223,10 @@ namespace Habr.Services
                 return;
             }
 
-            var post = await _context.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id);
+            var post = await _context.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id && !p.IsPublished);
             if (post == null)
             {
-                Console.WriteLine("Post not found or you don't have permission to publish it.");
+                Console.WriteLine("Draft not found or you don't have permission to publish it.");
                 return;
             }
 
@@ -186,6 +234,41 @@ namespace Habr.Services
             post.UpdatedDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             Console.WriteLine("Post published successfully.");
+        }
+
+
+        public async Task MoveToDraftsAsync(User user)
+        {
+            Console.Write("Enter the ID of the post you want to move to drafts: ");
+            if (!int.TryParse(Console.ReadLine(), out var postId))
+            {
+                Console.WriteLine("Invalid ID format");
+                return;
+            }
+
+            var post = await _context.Posts.Include(p => p.Comments).SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id);
+            if (post == null)
+            {
+                Console.WriteLine("Post not found or you don't have permission to move it to drafts.");
+                return;
+            }
+
+            if (!post.IsPublished)
+            {
+                Console.WriteLine("The post is already in drafts.");
+                return;
+            }
+
+            if (post.Comments.Any())
+            {
+                Console.WriteLine("A published post cannot be moved to drafts if there are comments attached to it.");
+                return;
+            }
+
+            post.IsPublished = false;
+            post.UpdatedDate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            Console.WriteLine("Post moved to drafts successfully.");
         }
     }
 }

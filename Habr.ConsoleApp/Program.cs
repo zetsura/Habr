@@ -81,6 +81,9 @@ namespace Habr.ConsoleApp
         {
             while (true)
             {
+                Console.WriteLine("\n====================");
+                Console.WriteLine("User Menu:");
+                Console.WriteLine("====================");
                 Console.WriteLine("1. View all posts");
                 Console.WriteLine("2. Create a post");
                 Console.WriteLine("3. Edit a post");
@@ -88,7 +91,10 @@ namespace Habr.ConsoleApp
                 Console.WriteLine("5. Comment on a post");
                 Console.WriteLine("6. Reply to a comment");
                 Console.WriteLine("7. Delete a comment");
-                Console.WriteLine("8. Logout");
+                Console.WriteLine("8. View all drafts");
+                Console.WriteLine("9. Publish a draft post");
+                Console.WriteLine("10. Move published post to drafts");
+                Console.WriteLine("11. Logout");
                 Console.Write("Select an option: ");
                 var option = Console.ReadLine();
 
@@ -98,7 +104,10 @@ namespace Habr.ConsoleApp
                         await postService.ViewAllPostsAsync();
                         break;
                     case "2":
-                        await postService.CreatePostAsync(user);
+                        Console.Write("Do you want to publish the post? (yes/no): ");
+                        var publishResponse = Console.ReadLine()?.ToLower();
+                        var isPublished = publishResponse == "yes";
+                        await postService.CreatePostAsync(user, isPublished);
                         break;
                     case "3":
                         await postService.EditPostAsync(user);
@@ -116,6 +125,15 @@ namespace Habr.ConsoleApp
                         await commentService.DeleteCommentAsync(user);
                         break;
                     case "8":
+                        await postService.ViewAllDraftsAsync(user);
+                        break;
+                    case "9":
+                        await postService.PublishPostAsync(user);
+                        break;
+                    case "10":
+                        await postService.MoveToDraftsAsync(user);
+                        break;
+                    case "11":
                         return;
                     default:
                         Console.WriteLine("Invalid option. Please select again.");
