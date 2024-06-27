@@ -22,6 +22,13 @@ namespace Habr.DataAccess.Migrations
                 oldMaxLength: 4000);
 
             migrationBuilder.AddColumn<bool>(
+                name: "IsDeleted",
+                table: "Posts",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<bool>(
                 name: "IsPublished",
                 table: "Posts",
                 type: "bit",
@@ -51,7 +58,8 @@ namespace Habr.DataAccess.Migrations
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Password = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    RegisteredDate = table.Column<DateTime>(type: "datetime", nullable: false)
+                    RegisteredDate = table.Column<DateTime>(type: "datetime", nullable: false),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false, defaultValue: false)
                 },
                 constraints: table =>
                 {
@@ -143,6 +151,10 @@ namespace Habr.DataAccess.Migrations
 
             migrationBuilder.DropIndex(
                 name: "IX_Posts_UserId",
+                table: "Posts");
+
+            migrationBuilder.DropColumn(
+                name: "IsDeleted",
                 table: "Posts");
 
             migrationBuilder.DropColumn(

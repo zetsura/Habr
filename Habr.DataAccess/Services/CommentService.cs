@@ -1,10 +1,11 @@
 ﻿using Habr.DataAccess;
 using Habr.DataAccess.Entities;
+using Habr.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Habr.Services
 {
-    public class CommentService
+    public class CommentService : ICommentService
     {
         private readonly DataContext _context;
         private const int MaxCommentLength = 300;

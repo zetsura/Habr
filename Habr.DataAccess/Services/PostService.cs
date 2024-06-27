@@ -1,10 +1,11 @@
 ﻿using Habr.DataAccess;
 using Habr.DataAccess.Entities;
+using Habr.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Habr.Services
 {
-    public class PostService
+    public class PostService : IPostService
     {
         private readonly DataContext _context;
         private const int MaxTitleLength = 200;
@@ -20,7 +21,7 @@ namespace Habr.Services
             var posts = await _context.Posts.Include(p => p.User)
                                             .Include(p => p.Comments)
                                             .ThenInclude(c => c.User)
-                                            .Where(p => p.IsPublished)
+                                            .Where(p => p.IsPublished && !p.IsDeleted)
                                             .OrderByDescending(p => p.Created)
                                             .AsNoTracking()
                                             .ToListAsync();
@@ -58,12 +59,12 @@ namespace Habr.Services
                 Console.WriteLine("--------------------");
             }
         }
-
+            
         public async Task ViewAllDraftsAsync(User user)
         {
             var drafts = await _context.Posts.Include(p => p.User)
                                              .Where(p => !p.IsPublished && p.UserId == user.Id)
-                                             .OrderByDescending(p => p.Created)
+                                             .OrderByDescending(p => p.UpdatedDate)
                                              .AsNoTracking()
                                              .ToListAsync();
 
@@ -133,7 +134,6 @@ namespace Habr.Services
             Console.WriteLine(isPublished ? "Post created and published successfully." : "Post created as draft successfully.");
         }
 
-
         public async Task EditPostAsync(User user)
         {
             Console.Write("Enter the ID of the post you want to edit: ");
@@ -146,7 +146,13 @@ namespace Habr.Services
             var post = await _context.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id);
             if (post == null)
             {
-                Console.WriteLine("Post not found or you don't have permission to edit it.");
+                Console.WriteLine("The post does not exist.");
+                return;
+            }
+
+            if (post.IsDeleted)
+            {
+                Console.WriteLine("The post has been deleted and cannot be edited.");
                 return;
             }
 
@@ -191,7 +197,6 @@ namespace Habr.Services
             Console.WriteLine("Post updated successfully.");
         }
 
-
         public async Task DeletePostAsync(User user)
         {
             Console.Write("Enter the ID of the post you want to delete: ");
@@ -202,19 +207,19 @@ namespace Habr.Services
             }
 
             var post = await _context.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id);
-            if (post == null)
+            if (post == null || post.IsDeleted)
             {
                 Console.WriteLine("The post does not exist.");
                 return;
             }
 
-            _context.Posts.Remove(post);
+            post.IsDeleted = true;
+            post.UpdatedDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            Console.WriteLine("Post deleted successfully.");
+            Console.WriteLine("Post marked as deleted successfully.");
         }
 
-
-        public async Task PublishPostAsync(User user)
+            public async Task PublishPostAsync(User user)
         {
             Console.Write("Enter the ID of the post you want to publish: ");
             if (!int.TryParse(Console.ReadLine(), out var postId))
@@ -235,7 +240,6 @@ namespace Habr.Services
             await _context.SaveChangesAsync();
             Console.WriteLine("Post published successfully.");
         }
-
 
         public async Task MoveToDraftsAsync(User user)
         {

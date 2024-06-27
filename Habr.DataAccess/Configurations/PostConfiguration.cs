@@ -39,6 +39,11 @@ namespace Habr.DataAccess.Configurations
                 .HasDefaultValue(false);
 
             entityTypeBuilder
+                .Property(p => p.IsDeleted)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            entityTypeBuilder
                 .HasOne(p => p.User)
                 .WithMany(u => u.Posts)
                 .HasForeignKey(p => p.UserId)

@@ -36,6 +36,11 @@ namespace Habr.DataAccess.Configurations
                 .Property(u => u.RegisteredDate)
                 .IsRequired()
                 .HasColumnType("datetime");
+
+            entityTypeBuilder
+                .Property(u => u.EmailConfirmed)
+                .IsRequired()
+                .HasDefaultValue(false);
         }
     }
 }

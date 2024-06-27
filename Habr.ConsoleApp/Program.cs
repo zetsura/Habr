@@ -5,11 +5,23 @@ using Microsoft.Extensions.Hosting;
 using Habr.DataAccess;
 using Habr.DataAccess.Entities;
 using Habr.Services;
+using Habr.DataAccess.Interfaces;
 
 namespace Habr.ConsoleApp
 {
     class Program
     {
+        private readonly IUserService _userService;
+        private readonly IPostService _postService;
+        private readonly ICommentService _commentService;
+
+        public Program(IUserService userService, IPostService postService, ICommentService commentService)
+        {
+            _userService = userService;
+            _postService = postService;
+            _commentService = commentService;
+        }
+
         static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
@@ -22,11 +34,8 @@ namespace Habr.ConsoleApp
 
                 Console.WriteLine("Database created and migration applied.");
 
-                var userService = services.GetRequiredService<UserService>();
-                var postService = services.GetRequiredService<PostService>();
-                var commentService = services.GetRequiredService<CommentService>();
-
-                await MainMenuAsync(userService, postService, commentService);
+                var program = services.GetRequiredService<Program>();
+                await program.MainMenuAsync();
             }
         }
 
@@ -41,34 +50,45 @@ namespace Habr.ConsoleApp
                 {
                     var connectionString = context.Configuration.GetConnectionString("myCon");
                     services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
-                    services.AddTransient<UserService>();
-                    services.AddTransient<PostService>();
-                    services.AddTransient<CommentService>();
+                    services.AddTransient<IUserService, UserService>();
+                    services.AddTransient<IPostService, PostService>();
+                    services.AddTransient<ICommentService, CommentService>();
+                    services.AddTransient<Program>();
                 });
 
-        static async Task MainMenuAsync(UserService userService, PostService postService, CommentService commentService)
+        public async Task MainMenuAsync()
         {
             while (true)
             {
                 Console.WriteLine("1. Register");
                 Console.WriteLine("2. Login");
-                Console.WriteLine("3. Exit");
+                Console.WriteLine("3. Confirm Email");
+                Console.WriteLine("4. Exit");
                 Console.Write("Select an option: ");
                 var option = Console.ReadLine();
 
                 switch (option)
                 {
                     case "1":
-                        await userService.RegisterAsync();
+                        await _userService.RegisterAsync();
                         break;
                     case "2":
-                        var user = await userService.LoginAsync();
-                        if (user != null)
+                        var user = await _userService.LoginAsync();
+                        if (user != null && user.EmailConfirmed)
                         {
-                            await UserMenuAsync(postService, commentService, user);
+                            await UserMenuAsync(user);
+                        }
+                        else if (user != null && !user.EmailConfirmed)
+                        {
+                            Console.WriteLine("Please confirm your email before logging in.");
                         }
                         break;
                     case "3":
+                        Console.Write("Enter your email to confirm: ");
+                        var email = Console.ReadLine();
+                        await _userService.ConfirmEmailAsync(email);
+                        break;
+                    case "4":
                         return;
                     default:
                         Console.WriteLine("Invalid option. Please select again.");
@@ -77,7 +97,7 @@ namespace Habr.ConsoleApp
             }
         }
 
-        static async Task UserMenuAsync(PostService postService, CommentService commentService, User user)
+        public async Task UserMenuAsync(User user)
         {
             while (true)
             {
@@ -101,37 +121,37 @@ namespace Habr.ConsoleApp
                 switch (option)
                 {
                     case "1":
-                        await postService.ViewAllPostsAsync();
+                        await _postService.ViewAllPostsAsync();
                         break;
                     case "2":
                         Console.Write("Do you want to publish the post? (yes/no): ");
                         var publishResponse = Console.ReadLine()?.ToLower();
                         var isPublished = publishResponse == "yes";
-                        await postService.CreatePostAsync(user, isPublished);
+                        await _postService.CreatePostAsync(user, isPublished);
                         break;
                     case "3":
-                        await postService.EditPostAsync(user);
+                        await _postService.EditPostAsync(user);
                         break;
                     case "4":
-                        await postService.DeletePostAsync(user);
+                        await _postService.DeletePostAsync(user);
                         break;
                     case "5":
-                        await commentService.CommentOnPostAsync(user);
+                        await _commentService.CommentOnPostAsync(user);
                         break;
                     case "6":
-                        await commentService.ReplyToCommentAsync(user);
+                        await _commentService.ReplyToCommentAsync(user);
                         break;
                     case "7":
-                        await commentService.DeleteCommentAsync(user);
+                        await _commentService.DeleteCommentAsync(user);
                         break;
                     case "8":
-                        await postService.ViewAllDraftsAsync(user);
+                        await _postService.ViewAllDraftsAsync(user);
                         break;
                     case "9":
-                        await postService.PublishPostAsync(user);
+                        await _postService.PublishPostAsync(user);
                         break;
                     case "10":
-                        await postService.MoveToDraftsAsync(user);
+                        await _postService.MoveToDraftsAsync(user);
                         break;
                     case "11":
                         return;
