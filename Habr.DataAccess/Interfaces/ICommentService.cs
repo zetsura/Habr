@@ -4,8 +4,8 @@ namespace Habr.DataAccess.Interfaces
 {
     public interface ICommentService
     {
-        Task CommentOnPostAsync(User user);
-        Task ReplyToCommentAsync(User user);
-        Task DeleteCommentAsync(User user);
+        Task CommentOnPostAsync(int userId);
+        Task ReplyToCommentAsync(int userId);
+        Task DeleteCommentAsync(int userId);
     }
 }

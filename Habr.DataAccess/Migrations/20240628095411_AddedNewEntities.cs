@@ -11,6 +11,11 @@ namespace Habr.DataAccess.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.RenameColumn(
+                name: "Created",
+                table: "Posts",
+                newName: "UpdatedAt");
+
             migrationBuilder.AlterColumn<string>(
                 name: "Text",
                 table: "Posts",
@@ -20,6 +25,13 @@ namespace Habr.DataAccess.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(4000)",
                 oldMaxLength: 4000);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "CreatedAt",
+                table: "Posts",
+                type: "datetime",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsDeleted",
@@ -36,11 +48,10 @@ namespace Habr.DataAccess.Migrations
                 defaultValue: false);
 
             migrationBuilder.AddColumn<DateTime>(
-                name: "UpdatedDate",
+                name: "PublishedDate",
                 table: "Posts",
                 type: "datetime",
-                nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "UserId",
@@ -59,7 +70,7 @@ namespace Habr.DataAccess.Migrations
                     Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Password = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     RegisteredDate = table.Column<DateTime>(type: "datetime", nullable: false),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false, defaultValue: false)
+                    IsEmailConfirmed = table.Column<bool>(type: "bit", nullable: false, defaultValue: false)
                 },
                 constraints: table =>
                 {
@@ -154,6 +165,10 @@ namespace Habr.DataAccess.Migrations
                 table: "Posts");
 
             migrationBuilder.DropColumn(
+                name: "CreatedAt",
+                table: "Posts");
+
+            migrationBuilder.DropColumn(
                 name: "IsDeleted",
                 table: "Posts");
 
@@ -162,12 +177,17 @@ namespace Habr.DataAccess.Migrations
                 table: "Posts");
 
             migrationBuilder.DropColumn(
-                name: "UpdatedDate",
+                name: "PublishedDate",
                 table: "Posts");
 
             migrationBuilder.DropColumn(
                 name: "UserId",
                 table: "Posts");
+
+            migrationBuilder.RenameColumn(
+                name: "UpdatedAt",
+                table: "Posts",
+                newName: "Created");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Text",

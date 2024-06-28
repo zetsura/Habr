@@ -74,11 +74,11 @@ namespace Habr.ConsoleApp
                         break;
                     case "2":
                         var user = await _userService.LoginAsync();
-                        if (user != null && user.EmailConfirmed)
+                        if (user != null && user.IsEmailConfirmed)
                         {
-                            await UserMenuAsync(user);
+                            await UserMenuAsync(user.Id);
                         }
-                        else if (user != null && !user.EmailConfirmed)
+                        else if (user != null && !user.IsEmailConfirmed)
                         {
                             Console.WriteLine("Please confirm your email before logging in.");
                         }
@@ -97,7 +97,7 @@ namespace Habr.ConsoleApp
             }
         }
 
-        public async Task UserMenuAsync(User user)
+        public async Task UserMenuAsync(int userId)
         {
             while (true)
             {
@@ -121,37 +121,37 @@ namespace Habr.ConsoleApp
                 switch (option)
                 {
                     case "1":
-                        await _postService.ViewAllPostsAsync();
+                        await _postService.ViewPublishedPostsAsync();
                         break;
                     case "2":
                         Console.Write("Do you want to publish the post? (yes/no): ");
                         var publishResponse = Console.ReadLine()?.ToLower();
                         var isPublished = publishResponse == "yes";
-                        await _postService.CreatePostAsync(user, isPublished);
+                        await _postService.CreatePostAsync(userId, isPublished);
                         break;
                     case "3":
-                        await _postService.EditPostAsync(user);
+                        await _postService.EditPostAsync(userId);
                         break;
                     case "4":
-                        await _postService.DeletePostAsync(user);
+                        await _postService.DeletePostAsync(userId);
                         break;
                     case "5":
-                        await _commentService.CommentOnPostAsync(user);
+                        await _commentService.CommentOnPostAsync(userId);
                         break;
                     case "6":
-                        await _commentService.ReplyToCommentAsync(user);
+                        await _commentService.ReplyToCommentAsync(userId);
                         break;
                     case "7":
-                        await _commentService.DeleteCommentAsync(user);
+                        await _commentService.DeleteCommentAsync(userId);
                         break;
                     case "8":
-                        await _postService.ViewAllDraftsAsync(user);
+                        await _postService.ViewMyDraftsAsync(userId);
                         break;
                     case "9":
-                        await _postService.PublishPostAsync(user);
+                        await _postService.PublishPostAsync(userId);
                         break;
                     case "10":
-                        await _postService.MoveToDraftsAsync(user);
+                        await _postService.MoveToDraftsAsync(userId);
                         break;
                     case "11":
                         return;

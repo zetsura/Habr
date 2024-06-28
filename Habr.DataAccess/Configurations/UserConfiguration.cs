@@ -15,7 +15,6 @@ namespace Habr.DataAccess.Configurations
 
             entityTypeBuilder
                 .Property(u => u.Name)
-                .IsRequired()
                 .HasMaxLength(100);
 
             entityTypeBuilder
@@ -38,7 +37,7 @@ namespace Habr.DataAccess.Configurations
                 .HasColumnType("datetime");
 
             entityTypeBuilder
-                .Property(u => u.EmailConfirmed)
+                .Property(u => u.IsEmailConfirmed)
                 .IsRequired()
                 .HasDefaultValue(false);
         }

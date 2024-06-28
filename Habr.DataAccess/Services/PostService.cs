@@ -1,4 +1,5 @@
 ﻿using Habr.DataAccess;
+using Habr.DataAccess.ApplicationConstants;
 using Habr.DataAccess.Entities;
 using Habr.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -8,25 +9,23 @@ namespace Habr.Services
     public class PostService : IPostService
     {
         private readonly DataContext _context;
-        private const int MaxTitleLength = 200;
-        private const int MaxTextLength = 2000;
 
         public PostService(DataContext context)
         {
             _context = context;
         }
 
-        public async Task ViewAllPostsAsync()
+        public async Task ViewPublishedPostsAsync()
         {
             var posts = await _context.Posts.Include(p => p.User)
                                             .Include(p => p.Comments)
                                             .ThenInclude(c => c.User)
                                             .Where(p => p.IsPublished && !p.IsDeleted)
-                                            .OrderByDescending(p => p.Created)
+                                            .OrderByDescending(p => p.PublishedDate)
                                             .AsNoTracking()
                                             .ToListAsync();
 
-            if (posts.Count == 0)
+            if (posts == null || posts.Count == 0)
             {
                 Console.WriteLine("No published posts found.");
                 return;
@@ -40,10 +39,8 @@ namespace Habr.Services
             {
                 Console.WriteLine($"\nPost ID: {post.Id}");
                 Console.WriteLine($"Title: {post.Title}");
-                Console.WriteLine($"Text: {post.Text}");
-                Console.WriteLine($"Author: {post.User.Email}");
-                Console.WriteLine($"Created: {post.Created}");
-                Console.WriteLine($"Updated: {post.UpdatedDate}");
+                Console.WriteLine($"Author: {post.User?.Email}");
+                Console.WriteLine($"Published: {post.PublishedDate}");
 
                 if (post.Comments != null && post.Comments.Count > 0)
                 {
@@ -51,7 +48,7 @@ namespace Habr.Services
                     foreach (var comment in post.Comments)
                     {
                         Console.WriteLine($"\tComment ID: {comment.Id}");
-                        Console.WriteLine($"\tComment by: {comment.User.Email}");
+                        Console.WriteLine($"\tComment by: {comment.User?.Email}");
                         Console.WriteLine($"\tCreated: {comment.Created}");
                         Console.WriteLine($"\tContent: {comment.Content}\n");
                     }
@@ -59,16 +56,16 @@ namespace Habr.Services
                 Console.WriteLine("--------------------");
             }
         }
-            
-        public async Task ViewAllDraftsAsync(User user)
+
+        public async Task ViewMyDraftsAsync(int userId)
         {
             var drafts = await _context.Posts.Include(p => p.User)
-                                             .Where(p => !p.IsPublished && p.UserId == user.Id)
-                                             .OrderByDescending(p => p.UpdatedDate)
+                                             .Where(p => !p.IsPublished && p.UserId == userId)
+                                             .OrderByDescending(p => p.UpdatedAt)
                                              .AsNoTracking()
                                              .ToListAsync();
 
-            if (drafts.Count == 0)
+            if (drafts == null || drafts.Count == 0)
             {
                 Console.WriteLine("No drafts found.");
                 return;
@@ -82,15 +79,13 @@ namespace Habr.Services
             {
                 Console.WriteLine($"\nDraft ID: {draft.Id}");
                 Console.WriteLine($"Title: {draft.Title}");
-                Console.WriteLine($"Text: {draft.Text}");
-                Console.WriteLine($"Author: {draft.User.Email}");
-                Console.WriteLine($"Created: {draft.Created}");
-                Console.WriteLine($"Updated: {draft.UpdatedDate}");
+                Console.WriteLine($"Created: {draft.CreatedAt}");
+                Console.WriteLine($"Updated: {draft.UpdatedAt}");
                 Console.WriteLine("--------------------");
             }
         }
 
-        public async Task CreatePostAsync(User user, bool isPublished)
+        public async Task CreatePostAsync(int userId, bool isPublished)
         {
             Console.Write("Enter the title of your post: ");
             var title = Console.ReadLine();
@@ -100,9 +95,9 @@ namespace Habr.Services
                 return;
             }
 
-            if (title.Length > MaxTitleLength)
+            if (title.Length > Constants.MaxTitleLength)
             {
-                Console.WriteLine($"The title must be less than {MaxTitleLength} symbols.");
+                Console.WriteLine($"The title must be less than {Constants.MaxTitleLength} symbols.");
                 return;
             }
 
@@ -114,9 +109,9 @@ namespace Habr.Services
                 return;
             }
 
-            if (text.Length > MaxTextLength)
+            if (text.Length > Constants.MaxTextLength)
             {
-                Console.WriteLine($"The text must be less than {MaxTextLength} symbols.");
+                Console.WriteLine($"The text must be less than {Constants.MaxTextLength} symbols.");
                 return;
             }
 
@@ -124,9 +119,10 @@ namespace Habr.Services
             {
                 Title = title,
                 Text = text,
-                Created = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow,
-                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                PublishedDate = isPublished ? (DateTime?)DateTime.UtcNow : null,
+                UserId = userId,
                 IsPublished = isPublished
             };
             _context.Posts.Add(post);
@@ -134,7 +130,7 @@ namespace Habr.Services
             Console.WriteLine(isPublished ? "Post created and published successfully." : "Post created as draft successfully.");
         }
 
-        public async Task EditPostAsync(User user)
+        public async Task EditPostAsync(int userId)
         {
             Console.Write("Enter the ID of the post you want to edit: ");
             if (!int.TryParse(Console.ReadLine(), out var postId))
@@ -143,7 +139,9 @@ namespace Habr.Services
                 return;
             }
 
-            var post = await _context.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id);
+            var post = await _context.Posts
+                .SingleOrDefaultAsync(p => p.Id == postId && p.UserId == userId);
+
             if (post == null)
             {
                 Console.WriteLine("The post does not exist.");
@@ -170,9 +168,9 @@ namespace Habr.Services
                 return;
             }
 
-            if (title.Length > MaxTitleLength)
+            if (title.Length > Constants.MaxTitleLength)
             {
-                Console.WriteLine($"The title must be less than {MaxTitleLength} symbols.");
+                Console.WriteLine($"The title must be less than {Constants.MaxTitleLength} symbols.");
                 return;
             }
 
@@ -184,20 +182,20 @@ namespace Habr.Services
                 return;
             }
 
-            if (text.Length > MaxTextLength)
+            if (text.Length > Constants.MaxTextLength)
             {
-                Console.WriteLine($"The text must be less than {MaxTextLength} symbols.");
+                Console.WriteLine($"The text must be less than {Constants.MaxTextLength} symbols.");
                 return;
             }
 
             post.Title = title;
             post.Text = text;
-            post.UpdatedDate = DateTime.UtcNow;
+            post.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             Console.WriteLine("Post updated successfully.");
         }
 
-        public async Task DeletePostAsync(User user)
+        public async Task DeletePostAsync(int userId)
         {
             Console.Write("Enter the ID of the post you want to delete: ");
             if (!int.TryParse(Console.ReadLine(), out var postId))
@@ -206,7 +204,9 @@ namespace Habr.Services
                 return;
             }
 
-            var post = await _context.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id);
+            var post = await _context.Posts
+                .SingleOrDefaultAsync(p => p.Id == postId && p.UserId == userId);
+
             if (post == null || post.IsDeleted)
             {
                 Console.WriteLine("The post does not exist.");
@@ -214,12 +214,12 @@ namespace Habr.Services
             }
 
             post.IsDeleted = true;
-            post.UpdatedDate = DateTime.UtcNow;
+            post.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             Console.WriteLine("Post marked as deleted successfully.");
         }
 
-            public async Task PublishPostAsync(User user)
+        public async Task PublishPostAsync(int userId)
         {
             Console.Write("Enter the ID of the post you want to publish: ");
             if (!int.TryParse(Console.ReadLine(), out var postId))
@@ -228,7 +228,9 @@ namespace Habr.Services
                 return;
             }
 
-            var post = await _context.Posts.SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id && !p.IsPublished);
+            var post = await _context.Posts
+                .SingleOrDefaultAsync(p => p.Id == postId && p.UserId == userId && !p.IsPublished);
+
             if (post == null)
             {
                 Console.WriteLine("Draft not found or you don't have permission to publish it.");
@@ -236,12 +238,13 @@ namespace Habr.Services
             }
 
             post.IsPublished = true;
-            post.UpdatedDate = DateTime.UtcNow;
+            post.PublishedDate = DateTime.UtcNow;
+            post.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             Console.WriteLine("Post published successfully.");
         }
 
-        public async Task MoveToDraftsAsync(User user)
+        public async Task MoveToDraftsAsync(int userId)
         {
             Console.Write("Enter the ID of the post you want to move to drafts: ");
             if (!int.TryParse(Console.ReadLine(), out var postId))
@@ -250,7 +253,10 @@ namespace Habr.Services
                 return;
             }
 
-            var post = await _context.Posts.Include(p => p.Comments).SingleOrDefaultAsync(p => p.Id == postId && p.UserId == user.Id);
+            var post = await _context.Posts
+                .Include(p => p.Comments)
+                .SingleOrDefaultAsync(p => p.Id == postId && p.UserId == userId);
+
             if (post == null)
             {
                 Console.WriteLine("Post not found or you don't have permission to move it to drafts.");
@@ -263,14 +269,14 @@ namespace Habr.Services
                 return;
             }
 
-            if (post.Comments.Any())
+            if (post.Comments != null && post.Comments.Any())
             {
                 Console.WriteLine("A published post cannot be moved to drafts if there are comments attached to it.");
                 return;
             }
 
             post.IsPublished = false;
-            post.UpdatedDate = DateTime.UtcNow;
+            post.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             Console.WriteLine("Post moved to drafts successfully.");
         }

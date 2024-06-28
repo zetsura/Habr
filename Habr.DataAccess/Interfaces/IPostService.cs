@@ -4,12 +4,12 @@ namespace Habr.DataAccess.Interfaces
 {
     public interface IPostService
     {
-        Task ViewAllPostsAsync();
-        Task ViewAllDraftsAsync(User user);
-        Task CreatePostAsync(User user, bool isPublished);
-        Task EditPostAsync(User user);
-        Task DeletePostAsync(User user);
-        Task PublishPostAsync(User user);
-        Task MoveToDraftsAsync(User user);
+        Task ViewPublishedPostsAsync();
+        Task ViewMyDraftsAsync(int userId);
+        Task CreatePostAsync(int userId, bool isPublished);
+        Task EditPostAsync(int userId);
+        Task DeletePostAsync(int userId);
+        Task PublishPostAsync(int userId);
+        Task MoveToDraftsAsync(int userId);
     }
 }
