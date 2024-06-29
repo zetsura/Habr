@@ -1,4 +1,5 @@
-﻿using Habr.DataAccess.Entities;
+﻿using Habr.DataAccess.ApplicationConstants;
+using Habr.DataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,7 +17,7 @@ namespace Habr.DataAccess.Configurations
             entityTypeBuilder
                 .Property(c => c.Content)
                 .IsRequired()
-                .HasMaxLength(300);
+                .HasMaxLength(Constants.MaxCommentLength);
 
             entityTypeBuilder
                 .Property(c => c.Created)

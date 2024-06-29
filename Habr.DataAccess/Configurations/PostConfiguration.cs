@@ -1,6 +1,7 @@
 ﻿using Habr.DataAccess.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Habr.DataAccess.ApplicationConstants;
 
 namespace Habr.DataAccess.Configurations
 {
@@ -16,12 +17,12 @@ namespace Habr.DataAccess.Configurations
             entityTypeBuilder
                 .Property(p => p.Title)
                 .IsRequired()
-                .HasMaxLength(200);
+                .HasMaxLength(Constants.MaxTitleLength);
 
             entityTypeBuilder
                 .Property(p => p.Text)
                 .IsRequired()
-                .HasMaxLength(2000);
+                .HasMaxLength(Constants.MaxTextLength);
 
             entityTypeBuilder
                 .Property(p => p.CreatedAt)
