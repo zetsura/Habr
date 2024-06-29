@@ -1,6 +1,8 @@
-﻿using Habr.DataAccess.Entities;
+﻿using Habr.DataAccess.ApplicationConstants;
+using Habr.DataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Metadata;
 
 namespace Habr.DataAccess.Configurations
 {
@@ -15,12 +17,12 @@ namespace Habr.DataAccess.Configurations
 
             entityTypeBuilder
                 .Property(u => u.Name)
-                .HasMaxLength(100);
+                .HasMaxLength(Constants.MaxNameLength);
 
             entityTypeBuilder
                 .Property(u => u.Email)
                 .IsRequired()
-                .HasMaxLength(200);
+                .HasMaxLength(Constants.MaxEmailLength);
 
             entityTypeBuilder
                 .HasIndex(u => u.Email)
@@ -29,7 +31,7 @@ namespace Habr.DataAccess.Configurations
             entityTypeBuilder
                 .Property(u => u.Password)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(Constants.MaxPasswordLength);
 
             entityTypeBuilder
                 .Property(u => u.RegisteredDate)
