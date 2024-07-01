@@ -57,10 +57,10 @@ namespace Habr.Services
             }
         }
 
-        public async Task ViewMyDraftsAsync(int userId)
+        public async Task ViewDraftsByUserAsync(int userId)
         {
             var drafts = await _context.Posts.Include(p => p.User)
-                                             .Where(p => !p.IsPublished && p.UserId == userId)
+                                             .Where(p => !p.IsPublished && p.UserId == userId && !p.IsDeleted)
                                              .OrderByDescending(p => p.UpdatedAt)
                                              .AsNoTracking()
                                              .ToListAsync();
@@ -214,6 +214,7 @@ namespace Habr.Services
             }
 
             post.IsDeleted = true;
+            post.PublishedDate = null;
             post.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             Console.WriteLine("Post marked as deleted successfully.");
@@ -276,6 +277,7 @@ namespace Habr.Services
             }
 
             post.IsPublished = false;
+            post.PublishedDate = null;
             post.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             Console.WriteLine("Post moved to drafts successfully.");

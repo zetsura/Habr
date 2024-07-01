@@ -33,10 +33,10 @@ namespace Habr.Services
                 return;
             }
 
-            var existingUser = await _context.Users
+            var isEmailTaken = await _context.Users
                 .AnyAsync(u => u.Email == email);
 
-            if (existingUser)
+            if (isEmailTaken)
             {
                 Console.WriteLine("The email is already taken.");
                 return;

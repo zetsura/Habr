@@ -145,7 +145,7 @@ namespace Habr.ConsoleApp
                         await _commentService.DeleteCommentAsync(userId);
                         break;
                     case "8":
-                        await _postService.ViewMyDraftsAsync(userId);
+                        await _postService.ViewDraftsByUserAsync(userId);
                         break;
                     case "9":
                         await _postService.PublishPostAsync(userId);
