@@ -21,12 +21,22 @@ namespace Habr.DataAccess.Configurations
             entityTypeBuilder
                 .Property(p => p.Text)
                 .IsRequired()
-                .HasMaxLength(4000);
+                .HasMaxLength(2000);
 
             entityTypeBuilder
                 .Property(p => p.Created)
                 .IsRequired()
                 .HasColumnType("datetime");
+
+            entityTypeBuilder
+                .Property(p => p.UpdatedDate)
+                .IsRequired()
+                .HasColumnType("datetime");
+
+            entityTypeBuilder
+                .Property(p => p.IsPublished)
+                .IsRequired()
+                .HasDefaultValue(false);
 
             entityTypeBuilder
                 .HasOne(p => p.User)

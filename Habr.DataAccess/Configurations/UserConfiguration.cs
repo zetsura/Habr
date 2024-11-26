@@ -21,7 +21,21 @@ namespace Habr.DataAccess.Configurations
             entityTypeBuilder
                 .Property(u => u.Email)
                 .IsRequired()
+                .HasMaxLength(200);
+
+            entityTypeBuilder
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            entityTypeBuilder
+                .Property(u => u.Password)
+                .IsRequired()
                 .HasMaxLength(100);
+
+            entityTypeBuilder
+                .Property(u => u.RegisteredDate)
+                .IsRequired()
+                .HasColumnType("datetime");
         }
     }
 }

@@ -6,11 +6,35 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Habr.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class AddNewEntities : Migration
+    public partial class AddedNewEntities : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterColumn<string>(
+                name: "Text",
+                table: "Posts",
+                type: "nvarchar(2000)",
+                maxLength: 2000,
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(4000)",
+                oldMaxLength: 4000);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsPublished",
+                table: "Posts",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "UpdatedDate",
+                table: "Posts",
+                type: "datetime",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+
             migrationBuilder.AddColumn<int>(
                 name: "UserId",
                 table: "Posts",
@@ -25,7 +49,9 @@ namespace Habr.DataAccess.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    RegisteredDate = table.Column<DateTime>(type: "datetime", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -87,6 +113,12 @@ namespace Habr.DataAccess.Migrations
                 table: "Comments",
                 column: "UserId");
 
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
+
             migrationBuilder.AddForeignKey(
                 name: "FK_Posts_Users_UserId",
                 table: "Posts",
@@ -114,8 +146,26 @@ namespace Habr.DataAccess.Migrations
                 table: "Posts");
 
             migrationBuilder.DropColumn(
+                name: "IsPublished",
+                table: "Posts");
+
+            migrationBuilder.DropColumn(
+                name: "UpdatedDate",
+                table: "Posts");
+
+            migrationBuilder.DropColumn(
                 name: "UserId",
                 table: "Posts");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Text",
+                table: "Posts",
+                type: "nvarchar(4000)",
+                maxLength: 4000,
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(2000)",
+                oldMaxLength: 2000);
         }
     }
 }
