@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Habr.ConsoleApp", "Habr.ConsoleApp\Habr.ConsoleApp.csproj", "{A6F2A827-1052-470B-9EDC-CF6B90935308}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Habr.ConsoleApp", "Habr.ConsoleApp\Habr.ConsoleApp.csproj", "{A6F2A827-1052-470B-9EDC-CF6B90935308}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Habr.DataAccess", "Habr.DataAccess\Habr.DataAccess.csproj", "{BBBCE606-813A-4D72-B894-90BA860F91ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Habr.DataAccess", "Habr.DataAccess\Habr.DataAccess.csproj", "{BBBCE606-813A-4D72-B894-90BA860F91ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
