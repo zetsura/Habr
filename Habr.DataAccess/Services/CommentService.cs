@@ -1,20 +1,21 @@
 ﻿using Habr.DataAccess;
+using Habr.DataAccess.ApplicationConstants;
 using Habr.DataAccess.Entities;
+using Habr.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Habr.Services
 {
-    public class CommentService
+    public class CommentService : ICommentService
     {
         private readonly DataContext _context;
-        private const int MaxCommentLength = 300;
 
         public CommentService(DataContext context)
         {
             _context = context;
         }
 
-        public async Task CommentOnPostAsync(User user)
+        public async Task CommentOnPostAsync(int userId)
         {
             Console.Write("Enter the ID of the post you want to comment on: ");
             if (!int.TryParse(Console.ReadLine(), out var postId))
@@ -23,7 +24,10 @@ namespace Habr.Services
                 return;
             }
 
-            var post = await _context.Posts.AsNoTracking().SingleOrDefaultAsync(p => p.Id == postId && p.IsPublished);
+            var post = await _context.Posts
+                .AsNoTracking()
+                .SingleOrDefaultAsync(p => p.Id == postId && p.IsPublished);
+
             if (post == null)
             {
                 Console.WriteLine("Post not found or is not published.");
@@ -38,25 +42,25 @@ namespace Habr.Services
                 return;
             }
 
-            if (content.Length > MaxCommentLength)
+            if (content.Length > Constants.MaxCommentLength)
             {
-                Console.WriteLine($"Content must be less than {MaxCommentLength} characters.");
+                Console.WriteLine($"Content must be less than {Constants.MaxCommentLength} characters.");
                 return;
             }
 
-            var comment = new Comment 
-            { 
-                Content = content, 
+            var comment = new Comment
+            {
+                Content = content,
                 Created = DateTime.UtcNow,
-                UserId = user.Id, 
-                PostId = post.Id 
+                UserId = userId,
+                PostId = post.Id
             };
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
             Console.WriteLine("Comment added successfully.");
         }
 
-        public async Task ReplyToCommentAsync(User user)
+        public async Task ReplyToCommentAsync(int userId)
         {
             Console.Write("Enter the ID of the comment you want to reply to: ");
             if (!int.TryParse(Console.ReadLine(), out var commentId))
@@ -65,7 +69,10 @@ namespace Habr.Services
                 return;
             }
 
-            var comment = await _context.Comments.AsNoTracking().SingleOrDefaultAsync(c => c.Id == commentId);
+            var comment = await _context.Comments
+                .AsNoTracking()
+                .SingleOrDefaultAsync(c => c.Id == commentId);
+
             if (comment == null)
             {
                 Console.WriteLine("Comment not found.");
@@ -80,19 +87,26 @@ namespace Habr.Services
                 return;
             }
 
-            if (content.Length > MaxCommentLength)
+            if (content.Length > Constants.MaxCommentLength)
             {
-                Console.WriteLine($"Content must be less than {MaxCommentLength} characters.");
+                Console.WriteLine($"Content must be less than {Constants.MaxCommentLength} characters.");
                 return;
             }
 
-            var reply = new Comment { Content = content, Created = DateTime.UtcNow, UserId = user.Id, PostId = comment.PostId, ParentCommentId = comment.Id };
+            var reply = new Comment
+            {
+                Content = content,
+                Created = DateTime.UtcNow,
+                UserId = userId,
+                PostId = comment.PostId,
+                ParentCommentId = comment.Id
+            };
             _context.Comments.Add(reply);
             await _context.SaveChangesAsync();
             Console.WriteLine("Reply added successfully.");
         }
 
-        public async Task DeleteCommentAsync(User user)
+        public async Task DeleteCommentAsync(int userId)
         {
             Console.Write("Enter the ID of the comment you want to delete: ");
             if (!int.TryParse(Console.ReadLine(), out var commentId))
@@ -101,7 +115,10 @@ namespace Habr.Services
                 return;
             }
 
-            var comment = await _context.Comments.Include(c => c.Replies).SingleOrDefaultAsync(c => c.Id == commentId && c.UserId == user.Id);
+            var comment = await _context.Comments
+                .Include(c => c.Replies)
+                .SingleOrDefaultAsync(c => c.Id == commentId && c.UserId == userId);
+
             if (comment == null)
             {
                 Console.WriteLine("Comment not found or you don't have permission to delete it.");

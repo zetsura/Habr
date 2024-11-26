@@ -1,16 +1,16 @@
 ﻿using Habr.DataAccess;
 using Habr.DataAccess.Entities;
-using Habr.DataAccess.Servicec;
+using Habr.DataAccess.Interfaces;
+using Habr.DataAccess.ApplicationConstants;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
+using Habr.DataAccess.Servicec;
 
 namespace Habr.Services
 {
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly DataContext _context;
-        private const int MaxNameLength = 100;
-        private const int MaxEmailLength = 200;
-        private const int MaxPasswordLength = 100;
 
         public UserService(DataContext context)
         {
@@ -19,38 +19,26 @@ namespace Habr.Services
 
         public async Task RegisterAsync()
         {
-            Console.Write("Enter your name: ");
-            var name = Console.ReadLine();
-            if (string.IsNullOrEmpty(name))
-            {
-                Console.WriteLine("Name is required.");
-                return;
-            }
-
-            if (name.Length > MaxNameLength)
-            {
-                Console.WriteLine($"Name must be less than {MaxNameLength} characters.");
-                return;
-            }
-
             Console.Write("Enter your email: ");
             var email = Console.ReadLine();
-            if (string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(email) || !IsValidEmail(email))
             {
-                Console.WriteLine("Email is required.");
+                Console.WriteLine("Invalid email format.");
                 return;
             }
 
-            if (email.Length > MaxEmailLength)
+            if (email.Length > Constants.MaxEmailLength)
             {
-                Console.WriteLine($"Email must be less than {MaxEmailLength} characters.");
+                Console.WriteLine($"Email must be less than {Constants.MaxEmailLength} characters.");
                 return;
             }
 
-            var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
-            if (existingUser != null)
+            var isEmailTaken = await _context.Users
+                .AnyAsync(u => u.Email == email);
+
+            if (isEmailTaken)
             {
-                Console.WriteLine("Email address is already taken.");
+                Console.WriteLine("The email is already taken.");
                 return;
             }
 
@@ -63,11 +51,13 @@ namespace Habr.Services
                 return;
             }
 
-            if (password.Length > MaxPasswordLength)
+            if (password.Length > Constants.MaxPasswordLength)
             {
-                Console.WriteLine($"Password must be less than {MaxPasswordLength} characters.");
+                Console.WriteLine($"Password must be less than {Constants.MaxPasswordLength} characters.");
                 return;
             }
+
+            var name = email.Split('@')[0];
 
             var hashedPassword = PasswordService.HashPassword(password);
             var user = new User
@@ -92,10 +82,12 @@ namespace Habr.Services
                 return null;
             }
 
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
+            var user = await _context.Users
+                .SingleOrDefaultAsync(u => u.Email == email);
+
             if (user == null)
             {
-                Console.WriteLine("Email address is incorrect.");
+                Console.WriteLine("The email is incorrect.");
                 return null;
             }
 
@@ -110,6 +102,28 @@ namespace Habr.Services
                 return null;
             }
             return user;
+        }
+
+        public async Task ConfirmEmailAsync(string email)
+        {
+            var user = await _context.Users
+                .SingleOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+            {
+                Console.WriteLine("User with the given email does not exist.");
+                return;
+            }
+
+            user.IsEmailConfirmed = true;
+            await _context.SaveChangesAsync();
+            Console.WriteLine("Email confirmed successfully.");
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            return Regex.IsMatch(email, emailPattern);
         }
     }
 }

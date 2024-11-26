@@ -1,6 +1,7 @@
 ﻿using Habr.DataAccess.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Habr.DataAccess.ApplicationConstants;
 
 namespace Habr.DataAccess.Configurations
 {
@@ -16,25 +17,34 @@ namespace Habr.DataAccess.Configurations
             entityTypeBuilder
                 .Property(p => p.Title)
                 .IsRequired()
-                .HasMaxLength(200);
+                .HasMaxLength(Constants.MaxTitleLength);
 
             entityTypeBuilder
                 .Property(p => p.Text)
                 .IsRequired()
-                .HasMaxLength(2000);
+                .HasMaxLength(Constants.MaxTextLength);
 
             entityTypeBuilder
-                .Property(p => p.Created)
+                .Property(p => p.CreatedAt)
                 .IsRequired()
                 .HasColumnType("datetime");
 
             entityTypeBuilder
-                .Property(p => p.UpdatedDate)
+                .Property(p => p.UpdatedAt)
                 .IsRequired()
+                .HasColumnType("datetime");
+
+            entityTypeBuilder
+                .Property(p => p.PublishedDate)
                 .HasColumnType("datetime");
 
             entityTypeBuilder
                 .Property(p => p.IsPublished)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            entityTypeBuilder
+                .Property(p => p.IsDeleted)
                 .IsRequired()
                 .HasDefaultValue(false);
 
